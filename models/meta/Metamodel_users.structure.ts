@@ -30,9 +30,9 @@ class User extends MetaObject {
         return process.env.JWT_SECRET as string;
     }
 
-    can_user_create_instances(): boolean {
+    can_user_create_instance(): boolean {
         return this.has_user_group.some(
-            (usergroup) => usergroup.can_create_instances,
+            (usergroup) => usergroup.can_create_instance,
         );
     }
 
