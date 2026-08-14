@@ -26,8 +26,23 @@ class User extends MetaObject {
         if (has_user_group) this.has_user_group = has_user_group;
     }
 
+    /**
+     * @description - The secret used to sign tokens. Only ever called on the
+     * server, which validates the variable while it starts; the check here exists
+     * so that a misconfiguration fails with this message rather than with
+     * jsonwebtoken's "secretOrPrivateKey must have a value".
+     * @returns {string} - The signing secret.
+     * @throws {Error} - If JWT_SECRET is not set in the environment.
+     */
     static get_jwt_secret(): string {
-        return process.env.JWT_SECRET as string;
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error(
+                "JWT_SECRET is not set. Tokens cannot be signed. " +
+                "Generate a secret with: openssl rand -base64 48",
+            );
+        }
+        return secret;
     }
 
     can_user_create_instance(): boolean {
@@ -49,7 +64,11 @@ class User extends MetaObject {
     generate_token(): string {
         const jwt_secret = User.get_jwt_secret();
         this.token = jwt.sign(this.toJsonForToken(), jwt_secret, {
-            expiresIn: process.env.TOKEN_EXPIRE_TIME,
+            // Pinned so that verification and signing cannot disagree on the
+            // algorithm, which is the shape of every "alg" confusion attack.
+            algorithm: "HS256",
+            expiresIn: (process.env.TOKEN_EXPIRE_TIME ??
+                "8h") as jwt.SignOptions["expiresIn"],
         });
         return this.token;
     }
@@ -116,10 +135,20 @@ class User extends MetaObject {
         return this.get_collection_difference<Usergroup>(user_group_to_compare, this.has_user_group)
     }
 
+    /**
+     * @description - Whether this user belongs to a group flagged as
+     * administrative. It replaces a comparison against one hardcoded username and
+     * uuid, which could be granted to no one else and revoked from no one.
+     *
+     * This reflects the groups loaded onto the object, so it answers the question
+     * for a user read from the database. A request is authorised against the
+     * database instead — see require_administrator in the server — because the
+     * claim carried by a token is only as fresh as the token.
+     * @returns {boolean} - True if the user is an administrator.
+     */
     is_admin(): boolean {
-        return (
-            this.get_username() == "admin" &&
-            this.get_uuid() == "ff892138-77e0-47fe-a323-3fe0e1bf0240"
+        return (this.has_user_group ?? []).some(
+            (usergroup) => usergroup.is_administrator,
         );
     }
 

@@ -18,6 +18,13 @@ class Usergroup extends MetaObject {
     @Type(() => MetaObject) public can_create_procedure: boolean; // list of parent uuid
     @Type(() => MetaObject) public can_create_user_group: boolean; // list of parent uuid
 
+    /**
+     * @description - Whether membership of this group confers administrator
+     * status: every right check passes, and only administrators may create
+     * accounts. A deployment may flag more than one group.
+     */
+    @Type(() => Boolean) public is_administrator: boolean;
+
     constructor(
         uuid: UUID,
         name: string,
@@ -34,7 +41,8 @@ class Usergroup extends MetaObject {
         can_create_port?: boolean,
         can_create_role?: boolean,
         can_create_procedure?: boolean,
-        can_create_user_group?: boolean
+        can_create_user_group?: boolean,
+        is_administrator?: boolean
     ) {
         super(uuid, name, description);
         this.read_right = read_right || [];
@@ -50,6 +58,11 @@ class Usergroup extends MetaObject {
         this.can_create_role = can_create_role || false;
         this.can_create_procedure = can_create_procedure || false;
         this.can_create_user_group = can_create_user_group || false;
+        this.is_administrator = is_administrator || false;
+    }
+
+    get_is_administrator(): boolean {
+        return this.is_administrator;
     }
 
     get_read_right(): UUID[] {
