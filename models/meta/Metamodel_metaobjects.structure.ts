@@ -182,6 +182,19 @@ class MetaObject {
         this.set_rotation(object.rotation);
     }
 
+    /**
+     * @description - Compare an incoming collection against the stored one and
+     * report what has to be created, deleted and written.
+     *
+     * Indexed by uuid on both sides rather than scanned: the previous version ran
+     * Array.includes over one collection and Array.find over the other from inside
+     * a loop, which is quadratic in the size of the metamodel.
+     *
+     * `modified` still holds every object present on both sides, changed or not.
+     * @param {T[]} collection_to_compare - The incoming collection.
+     * @param {T[]} current_collection - The collection as currently stored.
+     * @returns {{added: T[], removed: T[], modified: T[]}} - The difference.
+     */
     get_collection_difference<T extends MetaObject>(collection_to_compare: T[], current_collection: T[]):
         {
             added: T[];
@@ -194,24 +207,28 @@ class MetaObject {
 
         if (typeof collection_to_compare === "undefined") return {added, removed, modified};
 
-        const current_T_uuids = current_collection.map((a) => a.get_uuid());
-        const T_to_compare_uuids = collection_to_compare.map((a) => a.get_uuid());
+        // The first occurrence of a uuid wins, which is what Array.find returned.
+        const incoming_by_uuid = new Map<UUID, T>();
+        for (const T of collection_to_compare) {
+            if (!incoming_by_uuid.has(T.get_uuid())) {
+                incoming_by_uuid.set(T.get_uuid(), T);
+            }
+        }
+        const current_uuids = new Set<UUID>(
+            current_collection.map((a) => a.get_uuid())
+        );
 
-        // Identify removed and modified attributes in one loop
         for (const T of current_collection) {
-            const uuid = T.get_uuid();
-            if (!T_to_compare_uuids.includes(uuid)) {
+            const incoming = incoming_by_uuid.get(T.get_uuid());
+            if (incoming === undefined) {
                 removed.push(T);
             } else {
-                const modified_T = collection_to_compare.find((a) => a.get_uuid() === uuid);
-                if (modified_T) modified.push(modified_T);
+                modified.push(incoming);
             }
         }
 
-        // Identify added attributes
         for (const T of collection_to_compare) {
-            const uuid = T.get_uuid();
-            if (!current_T_uuids.includes(uuid)) {
+            if (!current_uuids.has(T.get_uuid())) {
                 added.push(T);
             }
         }
