@@ -1,4 +1,5 @@
 import {Expose, plainToInstance, Transform, Type} from "class-transformer";
+import {WriteSpec, write_would_change} from "../write_difference";
 
 export type UUID = string;
 
@@ -34,6 +35,20 @@ export class Quaternion {
 }
 
 //export type Point3D = {x:number, y:number, z:number};
+
+/**
+ * @description - The columns of metaobject that update_metaObject writes, all of
+ * them as coalesce($n, column). Note that rotation is not among them, although
+ * the class carries one.
+ */
+export const METAOBJECT_WRITE_FIELDS = [
+    "name",
+    "description",
+    "geometry",
+    "coordinates_2d",
+    "relative_coordinate_3d",
+    "absolute_coordinate_3d",
+];
 
 class MetaObject {
     @Type(() => String) public uuid: UUID;
@@ -183,6 +198,17 @@ class MetaObject {
     }
 
     /**
+     * @description - What a write of this object puts in the database. The base
+     * class does not describe itself, so a bare MetaObject is always reported as
+     * modified; the concrete classes override this.
+     * @returns {WriteSpec | null} - The specification, or null when the write is
+     * not modelled and the object must always be written.
+     */
+    get_write_spec(): WriteSpec | null {
+        return null;
+    }
+
+    /**
      * @description - Compare an incoming collection against the stored one and
      * report what has to be created, deleted and written.
      *
@@ -190,7 +216,11 @@ class MetaObject {
      * Array.includes over one collection and Array.find over the other from inside
      * a loop, which is quadratic in the size of the metamodel.
      *
-     * `modified` still holds every object present on both sides, changed or not.
+     * `modified` holds the objects present on both sides that a write would
+     * actually change; it used to hold every object present on both sides,
+     * without comparing a field. A class that does not describe its write in
+     * get_write_spec is still always reported, so an unmodelled write path is
+     * never skipped.
      * @param {T[]} collection_to_compare - The incoming collection.
      * @param {T[]} current_collection - The collection as currently stored.
      * @returns {{added: T[], removed: T[], modified: T[]}} - The difference.
@@ -222,7 +252,7 @@ class MetaObject {
             const incoming = incoming_by_uuid.get(T.get_uuid());
             if (incoming === undefined) {
                 removed.push(T);
-            } else {
+            } else if (write_would_change(incoming, T)) {
                 modified.push(incoming);
             }
         }

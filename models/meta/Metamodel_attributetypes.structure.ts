@@ -1,5 +1,7 @@
 import {MetaObject, UUID} from "./Metamodel_metaobjects.structure";
 import {Type} from "class-transformer";
+import {METAOBJECT_WRITE_FIELDS} from "./Metamodel_metaobjects.structure";
+import {WriteSpec} from "../write_difference";
 import {Role} from "./Metamodel_roles.structure";
 import {ColumnStructure} from "./Metamodel_columns.structure";
 
@@ -110,5 +112,21 @@ class AttributeType extends MetaObject {
         }
 
         return {added, removed, modified};
+    }
+
+    /**
+     * @description - Metamodel_attribute_types_connection.update writes metaobject,
+     * then update_attributeType, then the role, then the table columns. A column is
+     * a ColumnStructure and has no uuid of its own, so the column list is compared
+     * whole rather than walked.
+     * @returns {WriteSpec} - What a write of this attribute type would put in the
+     * database.
+     */
+    get_write_spec(): WriteSpec {
+        return {
+            fields: [...METAOBJECT_WRITE_FIELDS, "pre_defined", "regex_value"],
+            hard_fields: ["has_table_attribute"],
+            children: ["role"],
+        };
     }
 }

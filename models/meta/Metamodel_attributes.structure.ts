@@ -1,6 +1,8 @@
 import { MetaObject, UUID } from "./Metamodel_metaobjects.structure";
 import { AttributeType } from "./Metamodel_attributetypes.structure";
 import { Type } from "class-transformer";
+import { METAOBJECT_WRITE_FIELDS } from "./Metamodel_metaobjects.structure";
+import { WriteSpec } from "../write_difference";
 
 export { Attribute };
 
@@ -104,4 +106,29 @@ class Attribute extends MetaObject {
         this.max = max;
     }
 
+
+  /**
+   * @description - Metamodel_attributes_connection.update writes metaobject, then
+   * the attribute row, then the attribute type when one is given.
+   * updateForParentUuid, which is how an attribute reached through a parent is
+   * written, also puts sequence and ui_component in the link table.
+   * @returns {WriteSpec} - What a write of this attribute would put in the
+   * database.
+   */
+  get_write_spec(): WriteSpec {
+    return {
+      fields: [
+        ...METAOBJECT_WRITE_FIELDS,
+        "multi_valued",
+        "default_value",
+        "facets",
+        "min",
+        "max",
+        "sequence",
+        "ui_component",
+        "attribute_type.uuid",
+      ],
+      children: ["attribute_type"],
+    };
+  }
 }

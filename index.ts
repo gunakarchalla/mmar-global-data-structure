@@ -24,3 +24,4 @@ export * from "./models/meta/Metamodel_usergroups.structure";
 export * from "./models/meta/Metamodel_files.structure";
 
 export * from "./models/meta/Metamodel_procedure.structure";
+export * from "./models/write_difference";

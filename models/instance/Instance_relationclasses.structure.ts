@@ -2,6 +2,7 @@ import { UUID } from "../meta/Metamodel_metaobjects.structure";
 import { ClassInstance } from "./Instance_classes.structure";
 import { RoleInstance } from "./Instance_roles.structure";
 import { Transform, Type } from "class-transformer";
+import { WriteSpec } from "../write_difference";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 function transformLinePoints(value: string | {}[] | null) {
@@ -99,4 +100,25 @@ add_line_point(linePoint: object): void {
 
 
 
+
+  /**
+   * @description - Instance_relationclass_connection.update runs the whole class
+   * instance update first, then update_relationClass_instance. It writes the two
+   * roles' uuids, not the roles themselves, so the roles are compared by uuid and
+   * not recursed into.
+   * @returns {WriteSpec} - What a write of this relation instance would put in
+   * the database.
+   */
+  get_write_spec(): WriteSpec {
+    const as_class_instance = super.get_write_spec();
+    return {
+      fields: [
+        ...(as_class_instance.fields ?? []),
+        "line_points",
+        "role_instance_from.uuid",
+        "role_instance_to.uuid",
+      ],
+      children: as_class_instance.children,
+    };
+  }
 }

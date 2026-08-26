@@ -3,6 +3,8 @@ import {ObjectInstance} from "./instance_objects.structure";
 import {PortInstance} from "./Instance_ports.structure";
 import {Type} from "class-transformer";
 import {AttributeInstance} from "./Instance_attributes.structure";
+import {INSTANCE_OBJECT_WRITE_FIELDS} from "./instance_objects.structure";
+import {WriteSpec} from "../write_difference";
 
 export class ClassInstance extends ObjectInstance {
     @Type(() => String) public uuid_class: UUID;
@@ -137,4 +139,25 @@ export class ClassInstance extends ObjectInstance {
     }
 
 
+
+    /**
+     * @description - Instance_class_connection.update writes instance_object, then
+     * update_class_instance, then walks the attribute and port collections. A class
+     * instance whose own columns are untouched but whose attribute changed must
+     * still be written, which is why the children are part of the comparison.
+     * @returns {WriteSpec} - What a write of this class instance would put in the
+     * database.
+     */
+    get_write_spec(): WriteSpec {
+        return {
+            fields: [
+                ...INSTANCE_OBJECT_WRITE_FIELDS,
+                "uuid_relationclass",
+                "uuid_decomposable_class",
+                "uuid_aggregator_class",
+                "uuid_relationclass_bendpoint",
+            ],
+            children: ["attribute_instance", "port_instance"],
+        };
+    }
 }

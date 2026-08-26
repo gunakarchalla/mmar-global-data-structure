@@ -2,6 +2,8 @@ import {UUID} from "../meta/Metamodel_metaobjects.structure";
 import {RoleInstance} from "./Instance_roles.structure";
 import {ObjectInstance} from "./instance_objects.structure";
 import {Type} from "class-transformer";
+import {INSTANCE_OBJECT_WRITE_FIELDS} from "./instance_objects.structure";
+import {WriteSpec} from "../write_difference";
 
 /**
  * This is the structure of the meta attribute
@@ -184,5 +186,30 @@ export class AttributeInstance extends ObjectInstance {
         modified: AttributeInstance[];
     } {
         return this.get_collection_difference<AttributeInstance>(attribute_table_to_compare, this.table_attributes);
+    }
+
+    /**
+     * @description - Instance_attribute_connection.update writes instance_object,
+     * then update_attribute_instance, then walks table_attributes. role_instance_from
+     * is not a column it writes but a role it posts, so any value there is treated
+     * as a change rather than modelled.
+     * @returns {WriteSpec} - What a write of this attribute instance would put in
+     * the database.
+     */
+    get_write_spec(): WriteSpec {
+        return {
+            fields: [
+                ...INSTANCE_OBJECT_WRITE_FIELDS,
+                "is_propagated",
+                "value",
+                "assigned_uuid_scene_instance",
+                "assigned_uuid_class_instance",
+                "assigned_uuid_port_instance",
+                "table_attribute_reference",
+                "table_row",
+            ],
+            children: ["table_attributes"],
+            opaque: ["role_instance_from"],
+        };
     }
 }

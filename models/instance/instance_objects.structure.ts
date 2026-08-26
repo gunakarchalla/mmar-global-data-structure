@@ -1,5 +1,23 @@
 import {Point2D, Point3D, Quaternion, UUID} from "../meta/Metamodel_metaobjects.structure";
 import {Expose, plainToInstance, Transform, Type} from "class-transformer";
+import {WriteSpec, write_would_change} from "../write_difference";
+
+/**
+ * @description - The columns of instance_object that Instance_objects_connection
+ * .update writes, all of them as coalesce($n, column). Every instance class goes
+ * through it, so every spec starts from this list.
+ */
+export const INSTANCE_OBJECT_WRITE_FIELDS = [
+    "name",
+    "description",
+    "geometry",
+    "coordinates_2d",
+    "relative_coordinate_3d",
+    "absolute_coordinate_3d",
+    "rotation",
+    "visibility",
+    "custom_variables",
+];
 
 export class ObjectInstance {
     @Type(() => String) public uuid: UUID;
@@ -201,6 +219,17 @@ export class ObjectInstance {
 
 
     /**
+     * @description - What a write of this object puts in the database. The base
+     * class does not describe itself, so a bare ObjectInstance is always
+     * reported as modified; the concrete classes below override this.
+     * @returns {WriteSpec | null} - The specification, or null when the write is
+     * not modelled and the object must always be written.
+     */
+    get_write_spec(): WriteSpec | null {
+        return null;
+    }
+
+    /**
      * @description - Compare an incoming collection against the stored one and
      * report what has to be created, deleted and written.
      *
@@ -209,7 +238,12 @@ export class ObjectInstance {
      * a loop, which is quadratic. A scene of 500 objects therefore cost a quarter
      * of a million comparisons per collection, per request, on the event loop.
      *
-     * `modified` still holds every object present on both sides, changed or not.
+     * `modified` holds the objects present on both sides that a write would
+     * actually change. It used to hold every object present on both sides,
+     * without comparing a field, and the callers write everything in `modified`:
+     * an autosave that moved one node of a 150-object scene rewrote all of it.
+     * A class that does not describe its write in get_write_spec is still always
+     * reported, so an unmodelled write path is never skipped.
      * @param {T[]} collection_to_compare - The incoming collection.
      * @param {T[]} current_collection - The collection as currently stored.
      * @returns {{added: T[], removed: T[], modified: T[]}} - The difference.
@@ -251,7 +285,7 @@ export class ObjectInstance {
             const incoming = incoming_by_uuid.get(T.get_uuid());
             if (incoming === undefined) {
                 removed.push(T);
-            } else {
+            } else if (write_would_change(incoming, T)) {
                 modified.push(incoming);
             }
         }

@@ -2,6 +2,8 @@ import {UUID} from "../meta/Metamodel_metaobjects.structure";
 import {ObjectInstance} from "./instance_objects.structure";
 import {Type} from "class-transformer";
 import {AttributeInstance} from "./Instance_attributes.structure";
+import {INSTANCE_OBJECT_WRITE_FIELDS} from "./instance_objects.structure";
+import {WriteSpec} from "../write_difference";
 
 export class PortInstance extends ObjectInstance {
     @Type(() => String) public uuid_port: UUID;
@@ -77,5 +79,22 @@ export class PortInstance extends ObjectInstance {
 
     get_attribute_instance_difference(attribute_to_compare: AttributeInstance[]) {
         return this.get_collection_difference<AttributeInstance>(attribute_to_compare, this.attribute_instances);
+    }
+
+    /**
+     * @description - Instance_port_connection.update writes instance_object, then
+     * update_port_instance, then walks the attribute collection.
+     * @returns {WriteSpec} - What a write of this port instance would put in the
+     * database.
+     */
+    get_write_spec(): WriteSpec {
+        return {
+            fields: [
+                ...INSTANCE_OBJECT_WRITE_FIELDS,
+                "uuid_class_instance",
+                "uuid_scene_instance",
+            ],
+            children: ["attribute_instances"],
+        };
     }
 }

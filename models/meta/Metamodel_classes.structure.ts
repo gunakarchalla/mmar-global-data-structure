@@ -2,6 +2,8 @@ import {MetaObject, UUID} from "./Metamodel_metaobjects.structure";
 import {Attribute} from "./Metamodel_attributes.structure";
 import {Port} from "./Metamodel_ports.structure";
 import {Type} from "class-transformer";
+import {METAOBJECT_WRITE_FIELDS} from "./Metamodel_metaobjects.structure";
+import {WriteSpec} from "../write_difference";
 
 export {Class};
 
@@ -107,5 +109,17 @@ class Class extends MetaObject {
         if (p) {
             this.set_port(p);
         }
+    }
+
+    /**
+     * @description - Metamodel_classes_connection.update writes metaobject, then
+     * update_class, then walks the attribute and port collections.
+     * @returns {WriteSpec} - What a write of this class would put in the database.
+     */
+    get_write_spec(): WriteSpec {
+        return {
+            fields: [...METAOBJECT_WRITE_FIELDS, "is_abstract", "is_reusable"],
+            children: ["attributes", "ports"],
+        };
     }
 }

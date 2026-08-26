@@ -1,6 +1,7 @@
 import { UUID } from "./Metamodel_metaobjects.structure";
 import { Class } from "./Metamodel_classes.structure";
 import { Type } from "class-transformer";
+import { WriteSpec } from "../write_difference";
 import { Role } from "./Metamodel_roles.structure";
 
 export { Relationclass };
@@ -52,5 +53,22 @@ class Relationclass extends Class {
 
   get_bendpoint() {
     return this.bendpoint;
+  }
+
+  /**
+   * @description - Metamodel_relationclasses_connection.update runs the whole
+   * class update first, then writes the relationclass row and both roles. The
+   * bendpoint is written twice, once without coalesce, so a null bendpoint
+   * overwrites what is stored.
+   * @returns {WriteSpec} - What a write of this relationclass would put in the
+   * database.
+   */
+  get_write_spec(): WriteSpec {
+    const as_class = super.get_write_spec();
+    return {
+      fields: [...(as_class.fields ?? []), "role_from.uuid", "role_to.uuid"],
+      hard_fields: ["bendpoint"],
+      children: [...(as_class.children ?? []), "role_from", "role_to"],
+    };
   }
 }

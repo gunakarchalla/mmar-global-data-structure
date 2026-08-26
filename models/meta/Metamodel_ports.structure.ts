@@ -1,6 +1,8 @@
 import {Attribute} from "./Metamodel_attributes.structure";
 import {MetaObject, UUID} from "./Metamodel_metaobjects.structure";
 import {Type} from "class-transformer";
+import {METAOBJECT_WRITE_FIELDS} from "./Metamodel_metaobjects.structure";
+import {WriteSpec} from "../write_difference";
 
 export class Port extends MetaObject {
     @Type(() => String) public uuid_class: UUID | null;
@@ -64,5 +66,20 @@ export class Port extends MetaObject {
         modified: Attribute[];
     } {
         return this.get_collection_difference<Attribute>(attribute_to_compare, this.get_attribute());
+    }
+
+    /**
+     * @description - Metamodel_ports_connection.update writes metaobject, then
+     * update_port, then walks the attribute collection. update_port has no
+     * coalesce: a null uuid_class or uuid_scene_type overwrites what is stored, so
+     * both are compared even when the incoming value is null.
+     * @returns {WriteSpec} - What a write of this port would put in the database.
+     */
+    get_write_spec(): WriteSpec {
+        return {
+            fields: [...METAOBJECT_WRITE_FIELDS],
+            hard_fields: ["uuid_class", "uuid_scene_type"],
+            children: ["attributes"],
+        };
     }
 }
