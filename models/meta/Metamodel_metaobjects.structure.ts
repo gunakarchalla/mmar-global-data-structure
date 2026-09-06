@@ -55,7 +55,6 @@ class MetaObject {
     @Type(() => String) public name: string;
 
     @Type(() => Function)
-    // eslint-disable-next-line @typescript-eslint/ban-types
     public geometry: Function;
 
     @Type(() => String)
@@ -89,12 +88,10 @@ class MetaObject {
     ) //convert the plain text to proper json
     public rotation: Quaternion;
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     constructor(
         uuid: UUID,
         name: string,
         description?: string,
-        // eslint-disable-next-line @typescript-eslint/ban-types
         geometry?: Function,
         coordinates_2d?: Point3D,
         relative_coordinate_3d?: Point3D,
@@ -146,7 +143,6 @@ class MetaObject {
         return this.name;
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     set_geometry(geometry: Function) {
         this.geometry = geometry;
     }
@@ -171,7 +167,6 @@ class MetaObject {
         this.rotation = rotation;
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     set_allAttributes(
         description: string,
         geometry: any,

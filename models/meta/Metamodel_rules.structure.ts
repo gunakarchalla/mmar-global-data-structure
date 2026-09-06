@@ -10,14 +10,11 @@ export class Rule {
     public name: string;
 
     @Type(() => String)
-    // eslint-disable-next-line @typescript-eslint/ban-types
     public value: string;
 
     @Type(() => String)
-    // eslint-disable-next-line @typescript-eslint/ban-types
     public assigned_uuid_metaobject: UUID;
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     constructor(uuid: UUID, name: string, assigned_uuid_metaobject: UUID, value?: string) {
         this.uuid = uuid;
         this.name = name;
@@ -30,7 +27,6 @@ export class Rule {
         return this.uuid;
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     set_value(value: string) {
         this.value = value;
     }

@@ -16,7 +16,6 @@ export class ClassInstance extends ObjectInstance {
     @Type(() => String) public uuid_scene_decomposition_reference: UUID[]; //added by @fabian --> x, y and z for the real world
     @Type(() => String) public uuid_relationclass_bendpoint: UUID;
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     constructor(
         uuid: UUID,
         uuidClass: UUID,

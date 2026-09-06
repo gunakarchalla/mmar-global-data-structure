@@ -5,19 +5,20 @@
   "author": "Fabian Muff & Daniel Borcard",
   "license": "AGPL-3.0",
   "scripts": {
-    "build": "npm install && copyfiles \"package*.json\" \"../dist/mmar-global-data-structure\" && npm install --prefix ../dist/mmar-global-data-structure"
+    "build": "npm install && copyfiles \"package*.json\" \"../dist/mmar-global-data-structure\" && npm install --prefix ../dist/mmar-global-data-structure",
+    "lint": "eslint ."
   },
   "dependencies": {
     "class-transformer": "0.5.1",
     "jsonwebtoken": "9.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/jsonwebtoken": "9.0.10",
     "@typescript-eslint/eslint-plugin": "8.69.0",
     "@typescript-eslint/parser": "8.69.0",
     "copyfiles": "2.4.1",
-    "eslint": "9.39.5",
-    "eslint-plugin-import": "2.32.0",
+    "eslint": "10.10.0",
     "typescript": "5.9.3"
   }
 }

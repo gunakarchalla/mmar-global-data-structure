@@ -9,6 +9,13 @@ import {
 import { Type } from "class-transformer";
 import { METAOBJECT_WRITE_FIELDS } from "./Metamodel_metaobjects.structure";
 import { WriteSpec } from "../write_difference";
+// `Class` is not referenced by this module's own code, but removing this import
+// REORDERS mmar-server's generated schemas.json: typescript-json-schema emits
+// definitions in the order the program reaches them, and this import is what
+// reaches Metamodel_classes before the roles do. The generated content is
+// identical either way - only the key order moves - but the server pins
+// schemas.json as a byte-identical invariant, so the import stays.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {Class} from "./Metamodel_classes.structure";
 
 export class Role extends MetaObject {

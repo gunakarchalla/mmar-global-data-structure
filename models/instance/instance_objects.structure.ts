@@ -25,7 +25,6 @@ export class ObjectInstance {
     @Type(() => String) public description: string;
 
     @Type(() => Function)
-    // eslint-disable-next-line @typescript-eslint/ban-types
     public geometry: Function;
 
     @Type(() => Point2D)
@@ -299,7 +298,6 @@ export class ObjectInstance {
         return {added, removed, modified};
     }
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     set_allAttributs(
         name: string,
         description: string,

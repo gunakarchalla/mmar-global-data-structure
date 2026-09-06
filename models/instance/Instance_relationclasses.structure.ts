@@ -4,7 +4,6 @@ import { RoleInstance } from "./Instance_roles.structure";
 import { Transform, Type } from "class-transformer";
 import { WriteSpec } from "../write_difference";
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 function transformLinePoints(value: string | {}[] | null) {
   const toReturn = [];
   if (value) {
@@ -20,12 +19,10 @@ function transformLinePoints(value: string | {}[] | null) {
 export class RelationclassInstance extends ClassInstance {
   @Type(() => Object)
   @Transform(({ value }) => transformLinePoints(value), { toClassOnly: true }) //convert the plain text to proper json
-  // eslint-disable-next-line @typescript-eslint/ban-types
   public line_points: object[]; //added by @fabian --> this stores the function obtained by the metamodel --> geometry
   @Type(() => RoleInstance) public role_instance_from: RoleInstance;
   @Type(() => RoleInstance) public role_instance_to: RoleInstance;
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
   constructor(
     uuid: UUID,
     uuidRelationclass: UUID,
