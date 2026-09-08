@@ -1,6 +1,5 @@
 import {MetaObject, UUID} from "./Metamodel_metaobjects.structure";
 import {Type} from "class-transformer";
-import * as jwt from "jsonwebtoken";
 import {Usergroup} from "./Metamodel_usergroups.structure";
 
 export {User};
@@ -26,25 +25,6 @@ class User extends MetaObject {
         if (has_user_group) this.has_user_group = has_user_group;
     }
 
-    /**
-     * @description - The secret used to sign tokens. Only ever called on the
-     * server, which validates the variable while it starts; the check here exists
-     * so that a misconfiguration fails with this message rather than with
-     * jsonwebtoken's "secretOrPrivateKey must have a value".
-     * @returns {string} - The signing secret.
-     * @throws {Error} - If JWT_SECRET is not set in the environment.
-     */
-    static get_jwt_secret(): string {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-            throw new Error(
-                "JWT_SECRET is not set. Tokens cannot be signed. " +
-                "Generate a secret with: openssl rand -base64 48",
-            );
-        }
-        return secret;
-    }
-
     can_user_create_instance(): boolean {
         return this.has_user_group.some(
             (usergroup) => usergroup.can_create_instance,
@@ -59,18 +39,6 @@ class User extends MetaObject {
 
     can_user_create_attribute(): boolean {
         return this.has_user_group.some((usergroup) => usergroup.can_create_attribute);
-    }
-
-    generate_token(): string {
-        const jwt_secret = User.get_jwt_secret();
-        this.token = jwt.sign(this.toJsonForToken(), jwt_secret, {
-            // Pinned so that verification and signing cannot disagree on the
-            // algorithm, which is the shape of every "alg" confusion attack.
-            algorithm: "HS256",
-            expiresIn: (process.env.TOKEN_EXPIRE_TIME ??
-                "8h") as jwt.SignOptions["expiresIn"],
-        });
-        return this.token;
     }
 
     can_user_create_class(): boolean {
@@ -150,13 +118,5 @@ class User extends MetaObject {
         return (this.has_user_group ?? []).some(
             (usergroup) => usergroup.is_administrator,
         );
-    }
-
-    private toJsonForToken() {
-        return {
-            username: this.username,
-            uuid: this.get_uuid(),
-            isAdmin: this.is_admin(),
-        };
     }
 }
