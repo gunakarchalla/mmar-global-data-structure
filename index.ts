@@ -5,6 +5,7 @@ export * from "./models/instance/Instance_relationclasses.structure";
 export * from "./models/instance/instance_objects.structure";
 export * from "./models/instance/Instance_roles.structure";
 export * from "./models/instance/Instance_scenes.structure";
+export * from "./models/instance/Instance_tables";
 
 export * from "./models/meta/Metamodel_attributes.structure";
 export * from "./models/meta/Metamodel_attributetypes.structure";

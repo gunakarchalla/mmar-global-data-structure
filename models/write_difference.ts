@@ -32,6 +32,12 @@ export type WriteSpec = {
      */
     children?: string[];
     /**
+     * Like `children`, for a collection the `update()` replaces rather than merges
+     * into: a child that is stored but no longer sent is deleted, so its absence is a
+     * difference as well. The cells of a table are one (see Instance_tables).
+     */
+    replaced_children?: string[];
+    /**
      * Properties whose write path is not a plain UPDATE and is not modelled here
      * (a create, for instance). Any value present makes the object dirty.
      */
@@ -131,6 +137,16 @@ function children_would_change(incoming: unknown, stored: unknown): boolean {
     return write_would_change(incoming, stored);
 }
 
+function children_were_removed(incoming: unknown, stored: unknown): boolean {
+    if (!Array.isArray(incoming) || !Array.isArray(stored)) return false;
+    const incoming_uuids = new Set(
+        incoming.map((child) => (child as { uuid?: string } | null)?.uuid)
+    );
+    return stored.some(
+        (child) => !incoming_uuids.has((child as { uuid?: string } | null)?.uuid)
+    );
+}
+
 /**
  * @description - Whether writing `incoming` over `stored` would put anything
  * different in the database, following the subtrees the write recurses into.
@@ -165,6 +181,13 @@ export function write_would_change(incoming: unknown, stored: unknown): boolean 
         if (children_would_change(read_path(incoming, name), read_path(stored, name))) {
             return true;
         }
+    }
+
+    for (const name of spec.replaced_children ?? []) {
+        const incoming_children = read_path(incoming, name);
+        const stored_children = read_path(stored, name);
+        if (children_would_change(incoming_children, stored_children)) return true;
+        if (children_were_removed(incoming_children, stored_children)) return true;
     }
 
     return false;
