@@ -9,7 +9,10 @@ export {AttributeType};
 
 class AttributeType extends MetaObject {
     @Type(() => Boolean) public pre_defined: boolean;
-    @Type(() => RegExp) public regex_value: RegExp;
+    // The database column is text and the API carries text: a pattern is written by
+    // hand in the metamodeling client, never built as a RegExp. It was declared a
+    // RegExp here, which every reader had to cast its way out of.
+    @Type(() => String) public regex_value: string;
     @Type(() => Role) public role: Role;
     @Type(() => ColumnStructure) public has_table_attribute: ColumnStructure[];
 
@@ -17,7 +20,7 @@ class AttributeType extends MetaObject {
         uuid: UUID,
         name: string,
         pre_defined: boolean,
-        regex_value: RegExp,
+        regex_value: string,
         has_table_attribute?: ColumnStructure[],
         r?: Role
     ) {
@@ -56,7 +59,7 @@ class AttributeType extends MetaObject {
         return this.regex_value;
     }
 
-    set_regex_value(regex_value: RegExp) {
+    set_regex_value(regex_value: string) {
         this.regex_value = regex_value;
     }
 
