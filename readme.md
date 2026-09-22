@@ -12,6 +12,39 @@ npm install
 
 For further installation information of the entire platform, please refer to the readme of the [MMAR repository](https://github.com/MM-AR/mmar) or the Wiki Entry of the [MMAR Manual Installation](https://github.com/MM-AR/mmar/wiki/Manual-MMAR-Installation).
 
+The consuming repositories resolve this one **from source**, through a `@gds` path alias
+pointing at the sibling checkout, rather than installing it from a registry. It therefore
+has to sit next to them, and a change here is visible to them immediately.
+
+Nothing in this package may import a Node-only module: the two React clients bundle it for
+the browser. Token signing and verification used to live here and broke that rule; they now
+sit in `mmar-server`'s token service.
+
+
+## More than the data structures
+
+The classes are (de)serialised with `class-transformer`, so a consumer must import
+`reflect-metadata` before anything else and revive with the static `fromJS` of the class
+rather than with its own `plainToInstance` — the decorator metadata lives only in the
+`class-transformer` copy this package resolves.
+
+Three groups of rules live here as well, because the server and both clients have to agree
+on them and had each grown their own version:
+
+- **Attribute value validation** (`models/meta/Metamodel_attribute_values.ts`) —
+  `attribute_value_violations` checks an attribute's default value and its facets against
+  the regular expression of its attribute type, and `is_valid_pattern` checks the pattern
+  itself. A pattern is applied as a whole-value match, and an absent or uncompilable one
+  constrains nothing rather than rejecting everything. Facets are separated by
+  `FACET_SEPARATOR`.
+- **Table structure** (`models/instance/Instance_tables.ts`) — columns are numbered, cell
+  rows are 0 based, and a position holds at most one cell. `table_violations` reports a
+  table that breaks those rules; `table_rows`, `add_table_row`, `remove_table_row` and
+  `move_table_row` are the operations that keep them.
+- **Write differencing** (`models/write_difference.ts`) — `write_would_change` answers
+  whether an incoming value differs from the stored one, so a write can carry only the
+  fields that actually changed instead of the whole object.
+
 
 ## Contributing
 
